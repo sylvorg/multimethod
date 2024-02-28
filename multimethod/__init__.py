@@ -8,7 +8,7 @@ import types
 import typing
 import warnings
 from collections.abc import Callable, Iterable, Iterator, Mapping
-from typing import Any, Literal, Optional, TypeVar, Union, get_type_hints, overload as tp_overload
+from typing import Any, Literal, Optional, Self, TypeVar, Union, get_type_hints, overload as tp_overload
 
 __version__ = '1.11.1'
 
@@ -305,6 +305,8 @@ class multimethod(dict):
 
     def __setitem__(self, types: tuple, func: Callable):
         self.clean()
+        if any(t is Self for t in types):
+            types = signature(inspect._findclass(func) if t is Self else t for t in types)
         if not isinstance(types, signature):
             types = signature(types)
         parents = types.parents = self.parents(types)
