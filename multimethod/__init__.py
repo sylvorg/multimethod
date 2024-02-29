@@ -213,7 +213,10 @@ class signature(tuple):
         # missing annotations are padded with `object`, but trailing objects are unnecessary
         indices = [index for index, param in enumerate(params) if param.name in type_hints]
         params = params[: max(indices, default=-1) + 1]
-        hints = [type_hints.get(param.name, object) for param in params]
+        hints = []
+        for param in params:
+            hint = type_hints.get(param.name, object)
+            hints.append(inspect._findclass(func) if hint is Self else hint)
         required = sum(param.default is param.empty for param in params)
         return cls(hints, required)
 
@@ -305,8 +308,6 @@ class multimethod(dict):
 
     def __setitem__(self, types: tuple, func: Callable):
         self.clean()
-        if any(t is Self for t in types):
-            types = signature(inspect._findclass(func) if t is Self else t for t in types)
         if not isinstance(types, signature):
             types = signature(types)
         parents = types.parents = self.parents(types)
